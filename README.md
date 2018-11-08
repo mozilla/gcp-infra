@@ -54,11 +54,27 @@ In the Gsuite Admin Console, navigate to billing again. Enable "Google Cloud Ide
 
 This allow us (as admin) to add users to GSuite without them receiving licenses to use GSuite products. They are strictly principals that can be mapped to an SSO user using SAML Claims.
 
-## Create your first user (Cloud Users vs GSuite Mailboxes)
+## User provisioning in GCP
 
+### Create your first user manually (Cloud Users vs GSuite Mailboxes)
+
+> Note, this is an optional step if you just want to test that users work
+> 
 In order to create a user without a license start in the GSuite Admin Console and navigate to "Directory => Users". Within users any user can be created so long as the username matches the Mozilla LDAP username (usually it's also their Mozilla email). As a standard we put the mozilla email as the users secondary email at present for all manually created users (e.g. jdoe@mozilla.com).
 
 ![](img/howto_3.png)
+
+## Automatic user provisioning with Mozilla IAM (SSO)
+
+> Note, this is the recommended way to setup provisioning.
+
+Users can and should be automatically provisioned and de-provisioned by the SSO setup. Google cannot currently do this automatically for environments that do not solely rely on Active Directory. In other words, SCIM is not supported.
+
+The alternative is to write a driver that will call Google's API in order to care for the provisioning and deprovisioning directly.
+
+This is the Mozilla IAM driver: https://github.com/mozilla-iam/gsuite_cloud_users_driver
+
+Follow the setup instructions from the repository to set the driver up. Once setup, users will be automatically add and removed as needed.
 
 ## Integration for SAML Based Authentication
 

@@ -39,13 +39,13 @@ A single mailbox GSuite domain exists for *gcp.infra.mozilla.com*.  Due to the n
 
 In the Gsuite Admin Console. Navigate to billing.  Select "G Suite Basic" and ensure Auto-Licensing is set to "Off for Everyone"
 
-![](https://s3-ap-northeast-1.amazonaws.com/mozilla-infosec-hackmd/uploads/upload_f23472fcd484075394f5691bd9e7f72c.png)
+![](img/howto_1.png)
 
 **Continued in billing:**
 
 The second part of this is to enable "Google Cloud Identity" free tier.  Note: you may need to request a limit increase.  The default number of cloud identity seats is ~ 100 at the time of writing.  
 
-![](https://s3-ap-northeast-1.amazonaws.com/mozilla-infosec-hackmd/uploads/upload_1bd63fc61842ec8c966a2b942bd97bd8.png)
+![](img/howto_2.png)
 
 What this has done now is allow us as an admin to add users to GSuite without them receiving licenses to use GSuite products.  They are strictly principals that can be mapped to an SSO user using SAML Claims.
 
@@ -53,7 +53,7 @@ What this has done now is allow us as an admin to add users to GSuite without th
 
 In order to create a user without a license start in the Admin Console and navigate to "Directory => Users".  Within users any user can be created so long as the username matches the Mozilla LDAP username.  As a standard we put the mozilla email as the users secondary email at present for all manually created users.
 
-![](https://s3-ap-northeast-1.amazonaws.com/mozilla-infosec-hackmd/uploads/upload_9c7c26a4acacb4f91bfaf919af620eba.png)
+![](img/howto_3.png)
 
 ## Auth0 Integration for SAML Based Authentication
 
@@ -95,7 +95,7 @@ https://www.google.com/a/gcp.infra.mozilla.com/acs
 
 On the google side the SAML setup points at the IDP initiated URL and receives the SAML certificate from Auth0.
 
-![](https://s3-ap-northeast-1.amazonaws.com/mozilla-infosec-hackmd/uploads/upload_0c35c55181b0dafc20f4119515d84316.png)
+![](img/howto_4.png)
 
 ### Remapping User Claims
 

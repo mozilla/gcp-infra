@@ -56,19 +56,18 @@ This allow us (as admin) to add users to GSuite without them receiving licenses 
 
 ## Create your first user (Cloud Users vs GSuite Mailboxes)
 
-In order to create a user without a license start in the Admin Console and navigate to "Directory => Users". Within users any user can be created so long as the username matches the Mozilla LDAP username (usually it's also their Mozilla email). As a standard we put the mozilla email as the users secondary email at present for all manually created users (e.g. jdoe@mozilla.com).
+In order to create a user without a license start in the GSuite Admin Console and navigate to "Directory => Users". Within users any user can be created so long as the username matches the Mozilla LDAP username (usually it's also their Mozilla email). As a standard we put the mozilla email as the users secondary email at present for all manually created users (e.g. jdoe@mozilla.com).
 
 ![](img/howto_3.png)
 
 ## Integration for SAML Based Authentication
 
-Fortunately SAML authentication is well documented for integration with GSuite.
-
-With Auth0 as SSO/Access Provider this is what has been used for the SAML claim map:
+### With Auth0
+#### SAML Claim Mapping configuration
+When using Auth0 as SSO/Access Provider you should use the following access map. It indicates which SAML claims Google understands and maps the Auth0 values to these claims. *An additional mapping is done with a rule in addition to this configuration (see below).*
 
 > Note that the Application callback URL (ACS) in this case is:
-
-https://www.google.com/a/gcp.infra.mozilla.com/acs
+> https://www.google.com/a/gcp.infra.mozilla.com/acs and should also be reflected in the configuration as "callback uri" when using Auth0
 
 
 ```
@@ -93,30 +92,22 @@ https://www.google.com/a/gcp.infra.mozilla.com/acs
 }
 ```
 
-> Note: The audience changes per GSuite domain.
+> Tip: The audience changes per GSuite domain.
 
 On the Google side the SAML setup points to the IDP initiated URL and receives the SAML certificate from Auth0.
 
 ![](img/howto_4.png)
 
-### Remapping User Claims
+#### SAML Claim mapping rule
 
-Due to the fact users are signing into mozilla.com using an auth0 SAML flow we have to remap some claims using an auth0 rule.
-
-This rule strips of the user principal name and appends the correct suffix to associate
+Due to the fact users are signing into the GSuite domain `mozilla.com` (or other Mozilla staff domains) using the SSO flow we have to remap additional claims to make the users look like they belong to another domain `gcp.infra.mozilla.com`. This can be done with Auth0 rules. See the sample rule below:
 
 ``` nodejs
 function (user, context, callback) {
-  if (!user) {
-    // If the user is not presented (i.e. a rule deleted it), just go on, since authenticate will always fail.
-    return callback(null, null, context);
-  }
+  if (context.clientID !== 'uYFDijsgXulJ040Os6VJLRxf0GG30OmC') // GSuite `client_id` (mozilla.com)
+    return callback(null, user, context);
 
-  if (context.clientID !== 'uYFDijsgXulJ040Os6VJLRxf0GG30OmC') return callback(null, user, context); // Google (test.mozilla.com)
-
-  // This rule simply remaps @mozilla.com e-mail addresses to @test.mozilla.com to be used with the test.mozilla.com GSuite domain.
-  // Be careful when adding replacements not to do "double-replacements" where a replace replaces another rule. If that happens,
-  // you probably want to improve this code instead
+  // Replace all known-staff domains
   user.myemail = user.email.replace("mozilla.com", "gcp.infra.mozilla.com").replace("mozillafoundation.org", "gcp.infra.mozilla.com").replace("getpocket.com", "gcp.infra.mozilla.com");
 
   context.samlConfiguration = context.samlConfiguration || {};
@@ -133,29 +124,33 @@ function (user, context, callback) {
 
 ```
 
+> Note that for potential non-staff user accounts, since they would sign-in into a regular Google account, this rule is not necessary. That said, any user that is not part of the `gcp.infra.mozilla.com` domain would still need to be remapped to have default accesses set. Please contact the Mozilla IAM team for such a use case.
+
 ### Google RelayState Parameters and SSO
 
-Google services require the use of a `?RelayState=` parameter when signing in.  This allows Google's SAML variant to understand what service you're signing into.  
+Google services require the use of the `?RelayState=` GET parameter when signing in. This allows Google's SAML variant to understand what service you're signing into. It will be added to the requested URL automatically, but if you contruct an URL manually this will need to be added for things to work.
 
-*The relay state for GCP is `?RelayState=https://console.cloud.google.com/`
+The relay state for GCP is `?RelayState=https://console.cloud.google.com/`
 
 ## Billing and Billing Associations
 
-Billing in GCP can be setup at the project level _or_ at the org level.  Anyone with access granted to the billing account
-can associate it with a project.  Currently it did not seem responsible to allow anyone to associate projects with the central credit card.  This happens on request by a GCP Billing Admin.
+Billing in GCP can be setup at the project level _or_ at the organization level. Anyone with access to the billing account
+can associate it with a project. As it would be dangerous to allow everyone to associate projects with a central credit card, you can only do this by request to a GCP Billing Admin.
 
-### Features that do not exist but should
+> XXX Where should the request actually go? Link? Email? Issue?
 
-There are a number of features that should exist but don't yet.  Here they are in user story form in case Google solves these in the future:
+### Feature wish list
 
-* As an admin I should be able to associate a billing account with a folder.  The billing should inherit to new resources and projects in the folder. 
+There are a number of features that should exist but don't yet. Here they are in user story form in case Google solves these in the future:
+
+* As an admin I should be able to associate a billing account with a folder. The billing should inherit to new resources and projects in the folder. 
 * As a developer I can get an event _similar to cloudwatch_ events for types of user signin.
 * As an admin I can set a policy to opportunistically provision users on signin with no resources or access.
 * As an admin I can map SAML group claims to specific roles in the GCP console.
 * As an admin I can assign a role at the ORG level as the default role for all users allowing recursion of the folder and tree structure.
 
-> Most of these stories above if solved.  
-
+> XXX Stuff below is yet to write down
+> 
 ## GCP Console Org Setup
 
 ### Code that doesn't exist yet
@@ -166,8 +161,5 @@ There are a number of features that should exist but don't yet.  Here they are i
 
 ## Break Glass Credentials
 
-TBD
-
 ## Incident Response in GCP Flow
 
-TBD

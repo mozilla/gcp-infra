@@ -175,7 +175,52 @@ There are a number of features that should exist but don't yet. Here they are in
 
 ### Minimum Roles Per User
 
-## Break Glass Credentials
+## Break Glass Credentials for the super-admin account
+
+In case of problem, such as the SSO setup malfunctioning, you may need to access the GSuite super-admin.
+This is a local Google user which does not use SSO and have full access to the complete GSuite and GCP setup. It's an extremely sensitive account.
+
+In order to access the GSuite super-admin you need to break the glass: i.e. cause a loud action that will cause the security teams to verify your actions were legitimate.
+
+### Requirements
+
+- The credentials must never be accessible by a single person (Shamir Secret Sharing is used to require multiple parties to be present when the account is used)
+- Using the credentials must send an alert to Mozilla's SIEM (MozDef)
+- The encrypted credentials must be stored in Mozilla Infosec's safes
+- The credentials must follow [Mozilla's Security Principles](https://infosec.mozilla.org/fundamentals/security_principles.html) (i.e. be strong and use 2FA)
+
+### Being part of the quorum with access to super-admin
+
+If you believe you should be part of the quorum with access to the super-admin, you have to:
+
+- Be part of Mozilla Operational or Security Staff
+- Have a few use cases in mind
+- Have a PGP key that is signed and verified by existing members of the quorum
+- Request being added (with your PGP key and use cases) at XXX
+
+> XXX Which online storage is used?
+> XXX Add request contact or method
+> 
+
+### How credentials are stored encrypted
+
+- Run this on a safe machine
+```
+# Ensure you have sss_share and GnuPG installed: https://github.com/azet/sss_share and https://www.gnupg.org
+# Ensure you have the signed, verified keys for all quorum members
+
+$ ./share member@mozilla.com, member2@mozilla.com, .. <<< credentials.txt
+$ srm credentials.txt
+```
+- Distribute the resulting encrypte files to each member
+
+### How to break the glass!
+
+- Decrypt your part of the credentials `gpg --decrypt ...`
+- Ask another member to decrypt their part of the credentials. They will verify your request is legitimate and ask you why this is necessary.
+- Inform <infosec@mozilla.com> that you're going to use the credentials
+- Use credentials
+- Revoke credentials and re-create them when done
 
 ## Incident Response in GCP Flow
 

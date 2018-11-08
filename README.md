@@ -1,69 +1,72 @@
-# Mozilla | GCP Infrastructure POC
+# Mozilla | GCP Infrastructure
 
 ---
 
 # Introduction
 
-Several departments within Mozilla have interest in running workloads in Google Compute.  This document seeks to describe a model that describes how the GCP accounts are setup for the Bedrock ( a.k.a. Mozilla.org POC ).  This design is meant to limit the potential _blast radius_ of a single "super admin" compromise in GSuite.  
+Several departments within Mozilla have interest in running workloads on the Google Compute Platform (GCP). This document describes how the GCP accounts are setup and is based on the POC run with the Bedrock team (mozilla.org). This design is meant to limit the potential _blast radius_ of a single "super admin" compromise in GSuite by separating GCP from GSuite.  
 
-# Goals
+## Goals
 
-* The new account should have 100% of staff use SSO to login.
-* The new account should have consolidated billing.
+* The GCP environment should have 100% of regular users go through SSO to login.
+* The GCP environment should have consolidated billing.
 * Resources in the account should only be editable by delegated admins per cost center.
-* Super Admins should still have organization "break glass" access to perform incident response.
+* Super Admins should still have an organization "break glass" access to perform incident response (security & operations alike).
 
-# Technical Implementation
+## Technical Implementation
 
-Mozilla currently uses GSuite for mozilla, mozillafoundation, getpocket, and more.  The requirements above require an additional domain _gcp.infra.mozilla.com_ in order to ensure complete GSuite separation of super admins.  This was setup as a standalone GSuite domain with a single mailbox leveraging the _new_ Google Cloud Identity free tier for additional users.  
+Mozilla currently uses GSuite (as in Drive, Docs, etc.) for several organizations.  The requirements above require an additional domain _gcp.infra.mozilla.com_ in order to ensure complete GSuite separation of super admins.  This was setup as a standalone GSuite domain with a single mailbox leveraging the _new_ Google Cloud Identity free tier for additional users.  
 
 ## URLs of Interest
 
-These are the primary URls for Google Cloud Management.  In both cases unless signing in as "super-admin" it will be best
+These are the primary URls for Google Cloud Management. In both cases unless signing in as "super-admin" it will be best
 to use the provider initiated signon URL.  As of today June 27, 2018 the provider initiated url is:
 
 ```
 https://auth.mozilla.auth0.com/samlp/uYFDijsgXulJ040Os6VJLRxf0GG30OmC
 ```
 
-> Note this url requires a relayState parameter.  See relayState section below for more information on Google SAML flows.
+> Note this url requires a `relayState` parameter. See relayState section below for more information on Google SAML flows.
 
 * GSuite Admin Console  https://admin.google.com
 * Google Cloud Admin https://cloud.google.com
 
-## GSuite vs GCP 
+# How to setup the GCP environment
 
-A single mailbox GSuite domain exists for *gcp.infra.mozilla.com*.  Due to the nature of the way the admin console works in all things enterprise and google the UX can be very confusing.  In order to create a GSuite domain that contains only a single licensed user two things need to happen.  Turn off auto-licensing and enable Google Cloud Identity (Free Tier). 
+### Notes on GSuite vs GCP
+A single mailbox GSuite domain exists for *gcp.infra.mozilla.com*. Due to the nature of the way the admin console works in GSuite Enterprise, things can be confusing. In order to create a GSuite domain that contains only a single licensed user two things need to happen: Turn off auto-licensing and enable Google Cloud Identity (Free Tier).
 
-* Disabling Auto Licensing
+## How-to setup GSuite & GCP
 
-In the Gsuite Admin Console. Navigate to billing.  Select "G Suite Basic" and ensure Auto-Licensing is set to "Off for Everyone"
+### 1 - Disabling Auto Licensing
+
+In the Gsuite Admin Console, navigate to billing. Select "G Suite Basic" and ensure Auto-Licensing is set to "Off for Everyone".
 
 ![](img/howto_1.png)
 
-**Continued in billing:**
+### 2 - Enable Google Cloud Identity (Free Tier)
 
-The second part of this is to enable "Google Cloud Identity" free tier.  Note: you may need to request a limit increase.  The default number of cloud identity seats is ~ 100 at the time of writing.  
+In the Gsuite Admin Console, navigate to billing again. Enable "Google Cloud Identity (Free Tier)".
+
+> Note that you may need to request a limit increase by calling Google. The default number of cloud identity seats is ~ 100 at the time of writing.  
 
 ![](img/howto_2.png)
 
-What this has done now is allow us as an admin to add users to GSuite without them receiving licenses to use GSuite products.  They are strictly principals that can be mapped to an SSO user using SAML Claims.
+This allow us (as admin) to add users to GSuite without them receiving licenses to use GSuite products. They are strictly principals that can be mapped to an SSO user using SAML Claims.
 
-### Cloud Users vs GSuite Mailboxes
+## Create your first user (Cloud Users vs GSuite Mailboxes)
 
-In order to create a user without a license start in the Admin Console and navigate to "Directory => Users".  Within users any user can be created so long as the username matches the Mozilla LDAP username.  As a standard we put the mozilla email as the users secondary email at present for all manually created users.
+In order to create a user without a license start in the Admin Console and navigate to "Directory => Users". Within users any user can be created so long as the username matches the Mozilla LDAP username (usually it's also their Mozilla email). As a standard we put the mozilla email as the users secondary email at present for all manually created users (e.g. jdoe@mozilla.com).
 
 ![](img/howto_3.png)
 
-## Auth0 Integration for SAML Based Authentication
+## Integration for SAML Based Authentication
 
-Fortunately SAML authentication is well documented for integration with GSuite.  No need to re-invent the wheel here.
+Fortunately SAML authentication is well documented for integration with GSuite.
 
-In auth0 this is what has been used for the SAML claim map:
+With Auth0 as SSO/Access Provider this is what has been used for the SAML claim map:
 
-Below is what is used for SAML claim maps:
-
-Application callback URL in this case is:
+> Note that the Application callback URL (ACS) in this case is:
 
 https://www.google.com/a/gcp.infra.mozilla.com/acs
 
@@ -92,8 +95,7 @@ https://www.google.com/a/gcp.infra.mozilla.com/acs
 
 > Note: The audience changes per GSuite domain.
 
-
-On the google side the SAML setup points at the IDP initiated URL and receives the SAML certificate from Auth0.
+On the Google side the SAML setup points to the IDP initiated URL and receives the SAML certificate from Auth0.
 
 ![](img/howto_4.png)
 

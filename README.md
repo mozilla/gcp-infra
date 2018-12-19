@@ -31,6 +31,12 @@ https://auth.mozilla.auth0.com/samlp/uYFDijsgXulJ040Os6VJLRxf0GG30OmC
 * GSuite Admin Console  https://admin.google.com
 * Google Cloud Admin https://cloud.google.com
 
+> Point and click
+```
+https://auth.mozilla.auth0.com/samlp/uYFDijsgXulJ040Os6VJLRxf0GG30OmC?RelayState=https://console.cloud.google.com/
+
+```
+
 # How to setup the GCP environment
 
 ### Notes on GSuite vs GCP

@@ -224,7 +224,7 @@ $ srm credentials.txt
 
 - Decrypt your part of the credentials `gpg --decrypt ...`
 - Ask another member to decrypt their part of the credentials. They will verify your request is legitimate and ask you why this is necessary.
-- Inform <infosec@mozilla.com> that you're going to use the credentials
+- Inform [Mozilla Enterprise Information Security](https://bugzilla.mozilla.org/enter_bug.cgi?product=Enterprise+Information+Security&component=General) that you're going to use the credentials
 - Use credentials
 - Revoke credentials and re-create them when done
 
